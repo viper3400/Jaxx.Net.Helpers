@@ -4,7 +4,7 @@ using Jaxx.Net.Helpers.IO;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Jaxx.Net.IOExtension.Tests
+namespace Jaxx.Net.Helpers.IO.Tests
 {
     public class FileOperationsShould
     {
