@@ -28,8 +28,6 @@ namespace Jaxx.Net.Helpers.IO.Tests
             File.WriteAllText(tmpFilePath, "test content");
 
             // run test
-            // todo: create loop
-
             output.WriteLine($"Start with: {tmpFilePath}");
             for (int i = 1; i <  1001; i++)
             {
@@ -63,8 +61,6 @@ namespace Jaxx.Net.Helpers.IO.Tests
             File.WriteAllText(tmpFilePath, "test content");
 
             // run test
-            // todo: create loop
-
             output.WriteLine($"Start with: {tmpFilePath}");
             for (int i = 1; i < 101; i++)
             {
