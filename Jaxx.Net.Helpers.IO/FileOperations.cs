@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 
 namespace Jaxx.Net.Helpers.IO
 {
@@ -8,76 +10,67 @@ namespace Jaxx.Net.Helpers.IO
     {
         public static void Copy(string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
-            if (copyOptions == null) throw new ArgumentNullException(nameof(copyOptions));
+            Contract.Assert(copyOptions != null);
 
             switch (copyOptions.CopyStrategy)
             {
-                default:
-                case CopyStrategy.Stop:
-                    File.Copy(sourceFileName, destFileName);
-                    break;
                 case CopyStrategy.Overwrite:
                     File.Copy(sourceFileName, destFileName, true);
                     break;
-                case CopyStrategy.Rename:
-                case CopyStrategy.RenameLatest:
+                case CopyStrategy.RenameNew:
+                    RenameNew(sourceFileName, destFileName, copyOptions.CompareDateOptions);
+                    break;
                 case CopyStrategy.RenameOld:
-                    RenameOld(sourceFileName, destFileName, copyOptions);
+                    RenameOld(sourceFileName, destFileName, copyOptions.CompareDateOptions);
                     break;
                
             }
         }
-
-        private static void RenameOld (string sourceFileName, string destFileName, CopyOptions copyOptions)
+        
+        private static void RenameOld (string sourceFileName, string destFileName, CompareDateOption compareDateOption)
         {
             if (File.Exists(destFileName))
             {
-                bool isDestFileLatest = IsDestFileLatest(sourceFileName, destFileName, copyOptions.CompareDateOptions);
-                if (isDestFileLatest)
+                var sourceFileInfo = new FileInfo(sourceFileName);
+                var destFileInfo = new FileInfo(destFileName);
+                var comparer = new FileDateComparer(sourceFileInfo, destFileInfo, compareDateOption);
+                
+                var renamedFilename = GetCountedUpExtension(destFileName);
+
+                if (comparer.OldFile.FullName == destFileName)
                 {
-                    // Rename sourceFile
-                   
+                    File.Move(destFileName, renamedFilename);
+                    File.Copy(sourceFileName, destFileName);
                 }
-                else
+                else if (comparer.NewFile.FullName == destFileName)
                 {
-                    // Rename destFike
+                    File.Copy(sourceFileName, renamedFilename);
                 }
             }
             else File.Copy(sourceFileName, destFileName);
-
         }
 
-        /// <summary>
-        /// Returns depending on CompareDateOption whether the target file is the newer one.
-        /// </summary>
-        /// <param name="sourceFileName"></param>
-        /// <param name="destFileName"></param>
-        /// <param name="compareDateOption"></param>
-        /// <returns></returns>
-        private static bool IsDestFileLatest(string sourceFileName, string destFileName, CompareDateOption compareDateOption)
+        private static void RenameNew(string sourceFileName, string destFileName, CompareDateOption compareDateOption)
         {
-            var destFileInfo = new FileInfo(destFileName);
-            var sourceFileInfo = new FileInfo(sourceFileName);
-
-            DateTime sourceFileTime;
-            DateTime destFileTime;
-
-            switch (compareDateOption)
+            if (File.Exists(destFileName))
             {
-                case CompareDateOption.CreationTime:
-                    sourceFileTime = sourceFileInfo.CreationTimeUtc;
-                    destFileTime = destFileInfo.CreationTimeUtc;
-                    break;
-                default:
-                case CompareDateOption.LastWriteTime:
-                    sourceFileTime = sourceFileInfo.LastWriteTimeUtc;
-                    destFileTime = destFileInfo.LastWriteTimeUtc;
-                    break;
+                var sourceFileInfo = new FileInfo(sourceFileName);
+                var destFileInfo = new FileInfo(destFileName);
+                var comparer = new FileDateComparer(sourceFileInfo, destFileInfo, compareDateOption);
+
+                var renamedFilename = GetCountedUpExtension(destFileName);
+
+                if (comparer.NewFile.FullName == destFileName)
+                {
+                    File.Move(destFileName, renamedFilename);
+                    File.Copy(sourceFileName, destFileName);
+                }
+                else if (comparer.OldFile.FullName == destFileName)
+                {
+                    File.Copy(sourceFileName, renamedFilename);
+                }
             }
-
-
-            var isDestFileLatest = destFileTime > sourceFileTime;
-            return isDestFileLatest;
+            else File.Copy(sourceFileName, destFileName);
         }
 
 
@@ -130,18 +123,7 @@ namespace Jaxx.Net.Helpers.IO
                 return filename;
             }
         }
-        /// <summary>
-        /// Obsolete
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        [System.Obsolete("Use GetCountedUpFilename or GetCountedUpExtension", true)]
-        public static string RenameToUniqueExtension(string filename)
-        {
-            //obsolete
-            return null;
-        }
-
+       
         /// <summary>
         /// Methode zum Erstellen eindeutiger Dateinamen.
         /// Hängt an eine Datei einen eindeutigen Datums- und Zeitstring an 

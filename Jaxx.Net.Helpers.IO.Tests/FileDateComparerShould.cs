@@ -68,6 +68,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             var oldFilePath = Path.Join(tmpPath, fileName);
             File.WriteAllText(oldFilePath, "I am the old one!");
             // now create a new one
+            System.Threading.Thread.Sleep(1000);
             var newFilePath = Path.Join(tmpPath, "newfile.txt");
             File.WriteAllText(newFilePath, "I am the new one!");
 

@@ -6,7 +6,7 @@ namespace Jaxx.Net.Helpers.IO
 {
     public class CopyOptions
     {
-        public CopyStrategy CopyStrategy { get; set; } = CopyStrategy.Stop;
+        public CopyStrategy CopyStrategy { get; set; } = CopyStrategy.RenameOld;
         public CompareDateOption CompareDateOptions { get; set; } = CompareDateOption.LastWriteTime;
     }
 }
