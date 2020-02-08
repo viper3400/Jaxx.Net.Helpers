@@ -18,59 +18,64 @@ namespace Jaxx.Net.Helpers.IO
                     File.Copy(sourceFileName, destFileName, true);
                     break;
                 case CopyStrategy.RenameNew:
-                    RenameNew(sourceFileName, destFileName, copyOptions.CompareDateOptions);
-                    break;
                 case CopyStrategy.RenameOld:
-                    RenameOld(sourceFileName, destFileName, copyOptions.CompareDateOptions);
+                    Rename(sourceFileName, destFileName, copyOptions);
                     break;
                
             }
         }
         
-        private static void RenameOld (string sourceFileName, string destFileName, CompareDateOption compareDateOption)
+        private static void Rename (string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             if (File.Exists(destFileName))
             {
                 var sourceFileInfo = new FileInfo(sourceFileName);
                 var destFileInfo = new FileInfo(destFileName);
-                var comparer = new FileDateComparer(sourceFileInfo, destFileInfo, compareDateOption);
-                
+                var comparer = new FileDateComparer(sourceFileInfo, destFileInfo, copyOptions.CompareDateOptions);
+
                 var renamedFilename = GetCountedUpExtension(destFileName);
 
-                if (comparer.OldFile.FullName == destFileName)
+
+                switch (copyOptions.CopyStrategy)
                 {
-                    File.Move(destFileName, renamedFilename);
-                    File.Copy(sourceFileName, destFileName);
+                    default:
+                        throw new NotSupportedException();
+                    case CopyStrategy.RenameNew:
+                        RenameNew(sourceFileName, destFileName, comparer, renamedFilename);
+                        break;
+                    case CopyStrategy.RenameOld:
+                        RenameOld(sourceFileName, destFileName, comparer, renamedFilename);
+                        break;
                 }
-                else if (comparer.NewFile.FullName == destFileName)
-                {
-                    File.Copy(sourceFileName, renamedFilename);
-                }
+
             }
             else File.Copy(sourceFileName, destFileName);
         }
 
-        private static void RenameNew(string sourceFileName, string destFileName, CompareDateOption compareDateOption)
+        private static void RenameOld(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
         {
-            if (File.Exists(destFileName))
+            if (comparer.OldFile.FullName == destFileName)
             {
-                var sourceFileInfo = new FileInfo(sourceFileName);
-                var destFileInfo = new FileInfo(destFileName);
-                var comparer = new FileDateComparer(sourceFileInfo, destFileInfo, compareDateOption);
-
-                var renamedFilename = GetCountedUpExtension(destFileName);
-
-                if (comparer.NewFile.FullName == destFileName)
-                {
-                    File.Move(destFileName, renamedFilename);
-                    File.Copy(sourceFileName, destFileName);
-                }
-                else if (comparer.OldFile.FullName == destFileName)
-                {
-                    File.Copy(sourceFileName, renamedFilename);
-                }
+                File.Move(destFileName, renamedFilename);
+                File.Copy(sourceFileName, destFileName);
             }
-            else File.Copy(sourceFileName, destFileName);
+            else if (comparer.NewFile.FullName == destFileName)
+            {
+                File.Copy(sourceFileName, renamedFilename);
+            }
+        }
+
+        private static void RenameNew(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
+        {
+            if (comparer.NewFile.FullName == destFileName)
+            {
+                File.Move(destFileName, renamedFilename);
+                File.Copy(sourceFileName, destFileName);
+            }
+            else if (comparer.OldFile.FullName == destFileName)
+            {
+                File.Copy(sourceFileName, renamedFilename);
+            }
         }
 
 
