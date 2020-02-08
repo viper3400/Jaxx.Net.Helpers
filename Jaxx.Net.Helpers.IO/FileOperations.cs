@@ -21,26 +21,26 @@ namespace Jaxx.Net.Helpers.IO
                     break;
                 case CopyStrategy.Rename:
                 case CopyStrategy.RenameLatest:
-                case CopyStrategy.RenameOlder:
-                    Rename(sourceFileName, destFileName, copyOptions);
+                case CopyStrategy.RenameOld:
+                    RenameOld(sourceFileName, destFileName, copyOptions);
                     break;
                
             }
         }
 
-        private static void Rename (string sourceFileName, string destFileName, CopyOptions copyOptions)
+        private static void RenameOld (string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             if (File.Exists(destFileName))
             {
                 bool isDestFileLatest = IsDestFileLatest(sourceFileName, destFileName, copyOptions.CompareDateOptions);
                 if (isDestFileLatest)
                 {
-                    // Rename destFile
+                    // Rename sourceFile
                    
                 }
                 else
                 {
-                    // Rename sourceFile
+                    // Rename destFike
                 }
             }
             else File.Copy(sourceFileName, destFileName);

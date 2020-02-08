@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Jaxx.Net.Helpers.IO
 {
-     public enum CopyStrategy { Rename, RenameLatest, RenameOlder, Overwrite, Stop}
+     public enum CopyStrategy { Rename, RenameLatest, RenameOld, Overwrite, Stop}
 }

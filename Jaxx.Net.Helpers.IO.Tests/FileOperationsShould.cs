@@ -71,5 +71,28 @@ namespace Jaxx.Net.Helpers.IO.Tests
                 File.WriteAllText(actual, "test content");
             }
         }
+
+        [Fact]
+        public void RenameLatestFile()
+        {
+            // clear previous test run
+            var tmpPath = Path.Join(Path.GetTempPath(), "renamelatesttest");
+            if (Directory.Exists(tmpPath)) Directory.Delete(tmpPath, true);
+
+            // init test with new directory and new file
+            Directory.CreateDirectory(tmpPath);
+            var fileName = "myfile.txt";
+            //create first file (old one)
+            var oldFilePath = Path.Join(tmpPath, fileName);
+            File.WriteAllText(oldFilePath, "I am the old one!");
+            // now create a new one
+            var newFilePath = Path.Join(tmpPath, "newfile.txt");
+            File.WriteAllText(newFilePath, "I am the new one!");
+
+            // now we try to "move" (rename) the new one, but we expect it to fail
+            Assert.Throws<System.IO.IOException>( () => File.Move(newFilePath, oldFilePath));
+
+            FileOperations.Copy(newFilePath, oldFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameOld, CompareDateOptions = CompareDateOption.LastWriteTime });
+        }
     }
 }
