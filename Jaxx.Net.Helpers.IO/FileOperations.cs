@@ -8,6 +8,14 @@ namespace Jaxx.Net.Helpers.IO
 {
     public static class FileOperations
     {
+        /// <summary>
+        /// Copies a source file to a destination directory. It is being considered whether a file with the same name
+        /// already exists in the target directory. You can use the CopyOptions parameter to control 
+        /// how to deal with a file that already exists.
+        /// </summary>
+        /// <param name="sourceFileName"></param>
+        /// <param name="destFileName"></param>
+        /// <param name="copyOptions">Specifies CopyStrategy and CompareDateOption</param>
         public static void Copy(string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             Contract.Assert(copyOptions != null);
