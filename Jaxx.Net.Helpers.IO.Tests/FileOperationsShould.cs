@@ -76,18 +76,22 @@ namespace Jaxx.Net.Helpers.IO.Tests
         public void RenameOldFile()
         {
             // clear previous test run
-            var tmpPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFile");
-            if (Directory.Exists(tmpPath)) Directory.Delete(tmpPath, true);
+            var tmpSourcePath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileSource");
+            if (Directory.Exists(tmpSourcePath)) Directory.Delete(tmpSourcePath, true);
+
+            var tmpDestPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileDest");
+            if (Directory.Exists(tmpDestPath)) Directory.Delete(tmpDestPath, true);
 
             // init test with new directory and new file
-            Directory.CreateDirectory(tmpPath);
+            Directory.CreateDirectory(tmpSourcePath);
+            Directory.CreateDirectory(tmpDestPath);
             var fileName = "myfile.txt";
-            //create first file (old one)
-            var oldFilePath = Path.Join(tmpPath, fileName);
+            //create first file (old one) in destination
+            var oldFilePath = Path.Join(tmpDestPath, fileName);
             File.WriteAllText(oldFilePath, "I am the old one!");
-            // now create a new one (but wait a little to assure that file date has changed)
+            // now create a new one in sourcePath (but wait a little to assure that file date has changed)
             System.Threading.Thread.Sleep(1000);
-            var newFilePath = Path.Join(tmpPath, "newfile.txt");
+            var newFilePath = Path.Join(tmpSourcePath, "myfile.txt");
             File.WriteAllText(newFilePath, "I am the new one!");
 
             // now we try to "move" (rename) the new one, but we expect it to fail
@@ -100,7 +104,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             Assert.Equal("I am the new one!", actual);
 
             // We expect a renamed file
-            var expectedRenamedFile = Path.Join(tmpPath, "myfile.tx1");
+            var expectedRenamedFile = Path.Join(tmpDestPath, "myfile.tx1");
             Assert.True(File.Exists(expectedRenamedFile));
 
             // We expect the old content
