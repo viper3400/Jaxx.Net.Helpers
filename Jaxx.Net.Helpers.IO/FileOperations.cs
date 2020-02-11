@@ -2,12 +2,17 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Jaxx.Net.Helpers.IO
 {
-    public static class FileOperations
+    public class FileOperations
     {
+        private ILogger logger;
+        public FileOperations(ILogger logger)
+        {
+            this.logger = logger;
+        }
         /// <summary>
         /// Copies a source file to a destination directory. It is being considered whether a file with the same name
         /// already exists in the target directory. You can use the CopyOptions parameter to control 
@@ -16,7 +21,7 @@ namespace Jaxx.Net.Helpers.IO
         /// <param name="sourceFileName"></param>
         /// <param name="destFileName"></param>
         /// <param name="copyOptions">Specifies CopyStrategy and CompareDateOption</param>
-        public static void Copy(string sourceFileName, string destFileName, CopyOptions copyOptions)
+        public void Copy(string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             Contract.Assert(copyOptions != null);
 
@@ -33,7 +38,7 @@ namespace Jaxx.Net.Helpers.IO
             }
         }
         
-        private static void Rename (string sourceFileName, string destFileName, CopyOptions copyOptions)
+        private void Rename (string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             if (File.Exists(destFileName))
             {
@@ -58,12 +63,13 @@ namespace Jaxx.Net.Helpers.IO
 
             }
             else File.Copy(sourceFileName, destFileName);
-        }
+        } 
 
-        private static void RenameOld(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
+        private void RenameOld(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
         {
             if (comparer.OldFile.FullName == destFileName)
             {
+                logger.LogDebug("RenameOld | Move {0} to {1}", destFileName, renamedFilename);
                 File.Move(destFileName, renamedFilename);
                 File.Copy(sourceFileName, destFileName);
             }
@@ -73,7 +79,7 @@ namespace Jaxx.Net.Helpers.IO
             }
         }
 
-        private static void RenameNew(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
+        private void RenameNew(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
         {
             if (comparer.NewFile.FullName == destFileName)
             {
@@ -94,7 +100,7 @@ namespace Jaxx.Net.Helpers.IO
         /// <param name="directory">The directory.</param>
         /// <param name="filename">The filename.</param>
         /// <returns>a unique filename</returns>
-        public static string GetCountedUpFilename(string filename)
+        public string GetCountedUpFilename(string filename)
         {
             if (!File.Exists(filename))
                 return filename;
@@ -119,7 +125,7 @@ namespace Jaxx.Net.Helpers.IO
         /// <param name="directory">The directory.</param>
         /// <param name="filename">The filename.</param>
         /// <returns>a unique filename</returns>
-        public static string GetCountedUpExtension(string filename)
+        public string GetCountedUpExtension(string filename)
         {
             if (!File.Exists(filename))
                 return filename;
@@ -143,7 +149,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="Dateiname">Name der umzubenennen Datei</param>
         /// <returns>Gibt den neuen Dateinamen zurück</returns>
-        public static string RenameToUniqueDateTime(string Dateiname)
+        public string RenameToUniqueDateTime(string Dateiname)
         {
             string datumzeit = DateTime.Now.ToString("yyyyMMdd_HHmmssmss");
             string neuerDateiname = String.Format("{0}.{1}", Dateiname, datumzeit);
@@ -158,12 +164,12 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="Path"></param>
         /// <returns></returns>
-        public static string GetUniqueDayDirectory(string Path)
+        public string GetUniqueDayDirectory(string Path)
         {
-            string newPath = FileOperations.EnsureTrailingBackslash(Path);
+            string newPath = EnsureTrailingBackslash(Path);
             //FS#57 DayDirectory im Format JJMMTTHHMMSS
             newPath = newPath + DateTime.Now.ToString("yyMMddHHmmss");
-            return FileOperations.EnsureTrailingBackslash(newPath);
+            return EnsureTrailingBackslash(newPath);
         }
 
         /// <summary>
@@ -172,7 +178,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="filePath">Der Pfadename mit oder ohne Backslash</param>
         /// <returns>Pfad mit abschliessendem Backslash</returns>
-        public static string EnsureTrailingBackslash(string filePath)
+        public string EnsureTrailingBackslash(string filePath)
         {
             // Zuerst prüfen, ob Pfad bereits einen Backslash enthält und diesen entfernen
             if (filePath.EndsWith("\\"))
@@ -192,7 +198,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="FilePath">der aufzutrennende Pfad</param>
         /// <returns>Ein String Array mit den einzelnen Teilstrings</returns>
-        public static string[] FilePathToArray(string FilePath)
+        public string[] FilePathToArray(string FilePath)
         {
             char[] chSplit = { '\\' };
             string[] splittedFilePath = FilePath.Split(chSplit);
@@ -207,7 +213,7 @@ namespace Jaxx.Net.Helpers.IO
         /// <param name="FullFileName"></param>
         /// <param name="Extension"></param>
         /// <returns></returns>
-        public static string RemoveExtension(string FullFileName, string Extension)
+        public string RemoveExtension(string FullFileName, string Extension)
         {
             string result;
             int fullFileNameLength = FullFileName.Length;
@@ -223,7 +229,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="path">The path.</param>
         /// <param name="newName">The new name.</param>
-        public static void RenameFile(string path, string newName)
+        public void RenameFile(string path, string newName)
         {
             var fileInfo = new FileInfo(path);
             File.Move(path, fileInfo.Directory + newName);
@@ -240,7 +246,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="Path"></param>
         /// <returns></returns>
-        public static string CutDriveOrUNCInformation(string Path)
+        public string CutDriveOrUNCInformation(string Path)
         {
             // Beginnt der ursprüngliche Name mit zwei Backslashes ist es wohl ein
             // UNC Pfad und die Backslashes, also die ersten beiden Stellen,
@@ -266,7 +272,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="OriginalFileName"></param>
         /// <param name="ExtraExtension"></param>
-        public static void AddExtraFileExtension(string OriginalFileName, string ExtraExtension)
+        public void AddExtraFileExtension(string OriginalFileName, string ExtraExtension)
         {
             string newFileName = String.Format("{0}{1}", OriginalFileName, ExtraExtension);
             File.Move(OriginalFileName, newFileName);
@@ -279,7 +285,7 @@ namespace Jaxx.Net.Helpers.IO
         /// </summary>
         /// <param name="OrginalFileNameList"></param>
         /// <param name="ExtraExtension"></param>
-        public static void AddExtraFileExtension(IEnumerable<string> OrginalFileNameList, string ExtraExtension)
+        public void AddExtraFileExtension(IEnumerable<string> OrginalFileNameList, string ExtraExtension)
         {
             foreach (string file in OrginalFileNameList)
             {
@@ -294,7 +300,7 @@ namespace Jaxx.Net.Helpers.IO
         /// <param name="File2"></param>
         /// <returns>Returns true in case the filesize of both files match.
         /// Returns false in case the filesize of both files won't match.</returns>
-        public static bool CompareFileSize(string File1, string File2)
+        public bool CompareFileSize(string File1, string File2)
         {
             try
             {

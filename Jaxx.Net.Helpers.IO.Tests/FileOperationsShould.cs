@@ -9,9 +9,11 @@ namespace Jaxx.Net.Helpers.IO.Tests
     public class FileOperationsShould
     {
         private readonly ITestOutputHelper output;
+        private XunitLogger<FileOperations> logger;
         public FileOperationsShould(ITestOutputHelper output)
         {
             this.output = output;
+            logger = new XunitLogger<FileOperations>(output);
         }
 
         [Fact]
@@ -33,7 +35,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             {
                 if (i < 1000)
                 {
-                    var actual = FileOperations.GetCountedUpExtension(tmpFilePath);
+                    var actual = new FileOperations(logger).GetCountedUpExtension(tmpFilePath);
                     var expected = tmpFilePath.Remove(tmpFilePath.Length - i.ToString().Length, i.ToString().Length) + i.ToString();
                     output.WriteLine($"i: {i} - {expected} - {actual}");
                     Assert.Equal(actual, expected);
@@ -42,7 +44,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
                 }
                 else if (i > 999)
                 {
-                    Assert.Throws<NotSupportedException>(() => FileOperations.GetCountedUpExtension(tmpFilePath));
+                    Assert.Throws<NotSupportedException>(() => new FileOperations(logger).GetCountedUpExtension(tmpFilePath));
                 }
             }
         }
@@ -64,7 +66,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             output.WriteLine($"Start with: {tmpFilePath}");
             for (int i = 1; i < 101; i++)
             {
-                var actual = FileOperations.GetCountedUpFilename(tmpFilePath);
+                var actual = new FileOperations(logger).GetCountedUpFilename(tmpFilePath);
                 var expected = tmpFilePath.Remove(tmpFilePath.Length - 4, 4) + i.ToString() + ".txt";
                 output.WriteLine($"i: {i} - {expected} - {actual}");
                 Assert.Equal(actual, expected);
@@ -97,7 +99,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             // now we try to "move" (rename) the new one, but we expect it to fail
             Assert.Throws<System.IO.IOException>( () => File.Move(newFilePath, oldFilePath));
 
-            FileOperations.Copy(newFilePath, oldFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameOld, CompareDateOptions = CompareDateOption.LastWriteTime });
+            new FileOperations(logger).Copy(newFilePath, oldFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameOld, CompareDateOptions = CompareDateOption.LastWriteTime });
 
             // We expect new content in the old file path
             var actual = File.ReadAllText(oldFilePath);
@@ -133,7 +135,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             // now we try to "move" (rename) the new one, but we expect it to fail
             Assert.Throws<System.IO.IOException>(() => File.Move(newFilePath, oldFilePath));
 
-            FileOperations.Copy(newFilePath, oldFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameNew, CompareDateOptions = CompareDateOption.LastWriteTime });
+            new FileOperations(logger).Copy(newFilePath, oldFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameNew, CompareDateOptions = CompareDateOption.LastWriteTime });
 
             // We expect old content in the old file path
             var actual = File.ReadAllText(oldFilePath);
