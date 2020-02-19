@@ -80,7 +80,7 @@ namespace Jaxx.Net.Helpers.IO
             }
             else if (comparer.NewFile.FullName == destFileInfo.FullName)
             {
-                logger.LogError("RenameOldCopy | Copy {0} to {1}", sourceFileName, renamedFilename);
+                logger.LogDebug("RenameOldCopy | Copy {0} to {1}", sourceFileName, renamedFilename);
                 File.Copy(sourceFileName, renamedFilename);
             }
         }
