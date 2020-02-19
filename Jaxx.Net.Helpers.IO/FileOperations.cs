@@ -73,7 +73,7 @@ namespace Jaxx.Net.Helpers.IO
             var destFileInfo = new FileInfo(destFileName);
             if (comparer.OldFile.FullName == destFileInfo.FullName)
             {
-                logger.LogError("RenameOldMove | Move {0} to {1}", destFileName, renamedFilename);
+                logger.LogDebug("RenameOldMove | Move {0} to {1}", destFileName, renamedFilename);
                 logger.LogDebug("RenameOldMove | Copy {0} to {1}", sourceFileName, destFileName);
                 File.Move(destFileName, renamedFilename);
                 File.Copy(sourceFileName, destFileName);
