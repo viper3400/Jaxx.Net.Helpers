@@ -92,7 +92,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             var oldFilePath = Path.Join(tmpDestPath, fileName);
             File.WriteAllText(oldFilePath, "I am the old one!");
             // now create a new one in sourcePath (but wait a little to assure that file date has changed)
-            System.Threading.Thread.Sleep(1000);
+            System.Threading.Thread.Sleep(2000);
             var newFilePath = Path.Join(tmpSourcePath, "myfile.txt");
             File.WriteAllText(newFilePath, "I am the new one!");
 
@@ -115,21 +115,108 @@ namespace Jaxx.Net.Helpers.IO.Tests
         }
 
         [Fact]
+        public void RenameOldFile2()
+        {
+            // clear previous test run
+            var tmpSourcePath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileSource2");
+            if (Directory.Exists(tmpSourcePath)) Directory.Delete(tmpSourcePath, true);
+
+            var tmpDestPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileDest2");
+            if (Directory.Exists(tmpDestPath)) Directory.Delete(tmpDestPath, true);
+
+            // init test with new directory and new file
+            Directory.CreateDirectory(tmpSourcePath);
+            Directory.CreateDirectory(tmpDestPath);
+            var fileName = "myfile.txt";
+            //create first file (old one) in destination
+            var oldFilePath = Path.Join(tmpSourcePath, fileName);
+            File.WriteAllText(oldFilePath, "I am the source, i am the old!");
+            // now create a new one in sourcePath (but wait a little to assure that file date has changed)
+            System.Threading.Thread.Sleep(2000);
+            var newFilePath = Path.Join(tmpDestPath, "myfile.txt");
+            File.WriteAllText(newFilePath, "I am the the existing, i am new!");
+
+            // now we try to "move" (rename) the new one, but we expect it to fail
+            Assert.Throws<System.IO.IOException>(() => File.Move(newFilePath, oldFilePath));
+
+            new FileOperations(logger).Copy(oldFilePath, newFilePath, new CopyOptions { CopyStrategy = CopyStrategy.RenameOld, CompareDateOptions = CompareDateOption.LastWriteTime });
+
+            // We expect new content in the old file path
+            var actual = File.ReadAllText(Path.Join(tmpDestPath, "myfile.txt"));
+            Assert.Equal("I am the the existing, i am new!", actual);
+
+            // We expect a renamed file
+            var expectedRenamedFile = Path.Join(tmpDestPath, "myfile.tx1");
+            Assert.True(File.Exists(expectedRenamedFile));
+
+            // We expect the old content
+            var expectedContentFromRenamedFile = File.ReadAllText(expectedRenamedFile);
+            Assert.Equal("I am the source, i am the old!", expectedContentFromRenamedFile);
+        }
+
+        [Fact]
+        public void RenameOldFile3()
+        {
+            // clear previous test run
+            var tmpSourcePath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileSource3");
+            if (Directory.Exists(tmpSourcePath)) Directory.Delete(tmpSourcePath, true);
+
+            var tmpDestPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameOldFileDest3");
+            if (Directory.Exists(tmpDestPath)) Directory.Delete(tmpDestPath, true);
+
+            // init test with new directory and new file
+            Directory.CreateDirectory(tmpSourcePath);
+            Directory.CreateDirectory(tmpDestPath);
+            var fileName = "myfile.txt";
+            //create first file (old one) in destination
+            var destFile = Path.Join(tmpDestPath, fileName);
+            File.WriteAllText(destFile, "I am the existing, i am the old!");
+            // now create a new one in sourcePath (but wait a little to assure that file date has changed)
+            System.Threading.Thread.Sleep(2000);
+            var sourceFile = Path.Join(tmpSourcePath, "myfile.txt");
+            File.WriteAllText(sourceFile, "I am the source, i am the new!");
+
+            // now we try to "move" (rename) the new one, but we expect it to fail
+            Assert.Throws<System.IO.IOException>(() => File.Move(sourceFile, destFile));
+
+            new FileOperations(logger).Copy(sourceFile, destFile, new CopyOptions { CopyStrategy = CopyStrategy.RenameOld, CompareDateOptions = CompareDateOption.LastWriteTime });
+
+            // We expect new content in the old file path
+            var actual = File.ReadAllText(Path.Join(tmpDestPath, "myfile.txt"));
+            Assert.Equal("I am the source, i am the new!", actual);
+
+            // We expect a renamed file
+            var expectedRenamedFile = Path.Join(tmpDestPath, "myfile.tx1");
+            Assert.True(File.Exists(expectedRenamedFile));
+
+            // We expect the old content
+            var expectedContentFromRenamedFile = File.ReadAllText(expectedRenamedFile);
+            Assert.Equal("I am the existing, i am the old!", expectedContentFromRenamedFile);
+        }
+
+        [Fact]
         public void RenameNewFile()
         {
             // clear previous test run
-            var tmpPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameNewFile");
-            if (Directory.Exists(tmpPath)) Directory.Delete(tmpPath, true);
+            var tmpSourcePath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameNewFileSource");
+            if (Directory.Exists(tmpSourcePath)) Directory.Delete(tmpSourcePath, true);
+
+            var tmpDestPath = Path.Join(Path.GetTempPath(), "Jaxx.Net.Helpers.IO.Tests", "RenameNewFileDest");
+            if (Directory.Exists(tmpDestPath)) Directory.Delete(tmpDestPath, true);
 
             // init test with new directory and new file
-            Directory.CreateDirectory(tmpPath);
+            Directory.CreateDirectory(tmpSourcePath);
+            Directory.CreateDirectory(tmpDestPath);
+
+            // init test with new directory and new file
+            Directory.CreateDirectory(tmpDestPath);
             var fileName = "myfile.txt";
             //create first file (old one)
-            var oldFilePath = Path.Join(tmpPath, fileName);
+            var oldFilePath = Path.Join(tmpSourcePath, fileName);
             File.WriteAllText(oldFilePath, "I am the old one!");
             // now create a new one (but wait a little to assure that file date has changed)
-            System.Threading.Thread.Sleep(1000);
-            var newFilePath = Path.Join(tmpPath, "newfile.txt");
+            System.Threading.Thread.Sleep(2000);
+            var newFilePath = Path.Join(tmpSourcePath, "newfile.txt");
             File.WriteAllText(newFilePath, "I am the new one!");
 
             // now we try to "move" (rename) the new one, but we expect it to fail
@@ -142,7 +229,7 @@ namespace Jaxx.Net.Helpers.IO.Tests
             Assert.Equal("I am the old one!", actual);
 
             // We expect a renamed file
-            var expectedRenamedFile = Path.Join(tmpPath, "myfile.tx1");
+            var expectedRenamedFile = Path.Join(tmpSourcePath, "myfile.tx1");
             Assert.True(File.Exists(expectedRenamedFile));
 
             // We expect the new content

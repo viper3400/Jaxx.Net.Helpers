@@ -4,15 +4,18 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
+
+
 namespace Jaxx.Net.Helpers.IO
 {
     public class FileOperations
     {
         private ILogger logger;
-        public FileOperations(ILogger logger)
+        public FileOperations(ILogger logger )
         {
             this.logger = logger;
         }
+
         /// <summary>
         /// Copies a source file to a destination directory. It is being considered whether a file with the same name
         /// already exists in the target directory. You can use the CopyOptions parameter to control 
@@ -34,10 +37,10 @@ namespace Jaxx.Net.Helpers.IO
                 case CopyStrategy.RenameOld:
                     Rename(sourceFileName, destFileName, copyOptions);
                     break;
-               
+
             }
         }
-        
+
         private void Rename (string sourceFileName, string destFileName, CopyOptions copyOptions)
         {
             if (File.Exists(destFileName))
@@ -63,30 +66,34 @@ namespace Jaxx.Net.Helpers.IO
 
             }
             else File.Copy(sourceFileName, destFileName);
-        } 
+        }
 
         private void RenameOld(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
         {
-            if (comparer.OldFile.FullName == destFileName)
+            var destFileInfo = new FileInfo(destFileName);
+            if (comparer.OldFile.FullName == destFileInfo.FullName)
             {
-                logger.LogDebug("RenameOld | Move {0} to {1}", destFileName, renamedFilename);
+                logger.LogError("RenameOldMove | Move {0} to {1}", destFileName, renamedFilename);
+                logger.LogDebug("RenameOldMove | Copy {0} to {1}", sourceFileName, destFileName);
                 File.Move(destFileName, renamedFilename);
                 File.Copy(sourceFileName, destFileName);
             }
-            else if (comparer.NewFile.FullName == destFileName)
+            else if (comparer.NewFile.FullName == destFileInfo.FullName)
             {
+                logger.LogError("RenameOldCopy | Copy {0} to {1}", sourceFileName, renamedFilename);
                 File.Copy(sourceFileName, renamedFilename);
             }
         }
 
         private void RenameNew(string sourceFileName, string destFileName, FileDateComparer comparer, string renamedFilename)
         {
-            if (comparer.NewFile.FullName == destFileName)
+            var destFileInfo = new FileInfo(destFileName);
+            if (comparer.NewFile.FullName == destFileInfo.FullName)
             {
                 File.Move(destFileName, renamedFilename);
                 File.Copy(sourceFileName, destFileName);
             }
-            else if (comparer.OldFile.FullName == destFileName)
+            else if (comparer.OldFile.FullName == destFileInfo.FullName)
             {
                 File.Copy(sourceFileName, renamedFilename);
             }
@@ -136,13 +143,13 @@ namespace Jaxx.Net.Helpers.IO
                 while (File.Exists(filename))
                 {
                     counter++;
-                    if (counter.ToString().Length > fileInfo.Extension.Length -1) throw new NotSupportedException("Extension length exceeded.");
+                    if (counter.ToString().Length > fileInfo.Extension.Length - 1) throw new NotSupportedException("Extension length exceeded.");
                     filename = fileInfo.FullName.Replace(fileInfo.Extension, string.Empty, StringComparison.OrdinalIgnoreCase) + fileInfo.Extension.Substring(0, fileInfo.Extension.Length - counter.ToString().Length) + counter;
                 }
                 return filename;
             }
         }
-       
+
         /// <summary>
         /// Methode zum Erstellen eindeutiger Dateinamen.
         /// Hängt an eine Datei einen eindeutigen Datums- und Zeitstring an 
